@@ -23,12 +23,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $id = generateUniqueId();
                     $content = $input['content'];
                     $language = isset($input['language']) ? $input['language'] : 'text';
+                    $expiration = isset($input['expiration']) ? intval($input['expiration']) : 0;
 
-                    if ($db->createNote($id, $content, $language)) {
+                    // Calculate expiration time if specified
+                    $expiresAt = null;
+                    if ($expiration > 0) {
+                        $expiresAt = date('Y-m-d H:i:s', time() + $expiration);
+                    }
+
+                    if ($db->createNote($id, $content, $language, $expiresAt)) {
                         echo json_encode([
                             'success' => true,
                             'id' => $id,
-                            'url' => SITE_URL . '/view.php?id=' . $id
+                            'url' => SITE_URL . '/view.php?id=' . $id,
+                            'expires_at' => $expiresAt
                         ]);
                     } else {
                         echo json_encode(['success' => false, 'error' => 'Failed to create note']);
@@ -47,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'note' => $note
                         ]);
                     } else {
-                        echo json_encode(['success' => false, 'error' => 'Note not found or already used']);
+                        echo json_encode(['success' => false, 'error' => 'Note not found, already used, or expired']);
                     }
                 } else {
                     echo json_encode(['success' => false, 'error' => 'ID is required']);

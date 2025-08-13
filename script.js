@@ -70,7 +70,9 @@ function onLanguageChange() {
 async function createNote() {
 	const content = editor.getValue();
 	const languageSelect = document.getElementById('language');
+	const expirationSelect = document.getElementById('expiration');
 	const language = languageSelect ? languageSelect.value : 'auto';
+	const expiration = expirationSelect ? parseInt(expirationSelect.value) : 0;
 
 	if (!content.trim()) {
 		showNotification('Пожалуйста, введите содержимое заметки', 'warning');
@@ -86,7 +88,8 @@ async function createNote() {
 			body: JSON.stringify({
 				action: 'create',
 				content: content,
-				language: language
+				language: language,
+				expiration: expiration
 			})
 		});
 
