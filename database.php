@@ -26,7 +26,7 @@ class Database {
             language VARCHAR(20) DEFAULT 'text',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expires_at TIMESTAMP NULL,
-            is_used BOOLEAN DEFAULT FALSE
+            is_viewed BOOLEAN DEFAULT FALSE
         )";
 
         if (!$this->connection->query($sql)) {
@@ -41,7 +41,7 @@ class Database {
     }
 
     public function getNote($id) {
-        $stmt = $this->connection->prepare("SELECT * FROM notes WHERE id = ? AND is_used = FALSE AND (expires_at IS NULL OR expires_at > NOW())");
+        $stmt = $this->connection->prepare("SELECT * FROM notes WHERE id = ? AND is_viewed = FALSE AND (expires_at IS NULL OR expires_at > NOW())");
         $stmt->bind_param("s", $id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -49,13 +49,13 @@ class Database {
     }
 
     public function markNoteAsUsed($id) {
-        $stmt = $this->connection->prepare("UPDATE notes SET is_used = TRUE WHERE id = ?");
+        $stmt = $this->connection->prepare("UPDATE notes SET is_viewed = TRUE WHERE id = ?");
         $stmt->bind_param("s", $id);
         return $stmt->execute();
     }
 
     public function deleteExpiredNotes() {
-        $sql = "DELETE FROM notes WHERE (expires_at IS NOT NULL AND expires_at < NOW()) OR is_used = TRUE";
+        $sql = "DELETE FROM notes WHERE (expires_at IS NOT NULL AND expires_at < NOW()) OR is_viewed = TRUE";
         return $this->connection->query($sql);
     }
 
