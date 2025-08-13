@@ -41,5 +41,8 @@ WORKDIR /var/www/html
 
 
 
+# Copy application source
+COPY . /var/www/html
+
 # Change ownership
 RUN chown -R www-data:www-data /var/www/html
