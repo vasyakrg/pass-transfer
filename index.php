@@ -30,7 +30,6 @@
                 <div class="expiration-selector">
                     <label for="expiration">Время жизни заметки:</label>
                     <select id="expiration">
-                        <option value="0">Без ограничения</option>
                         <option value="600">10 минут</option>
                         <option value="3600">1 час</option>
                         <option value="86400">1 день</option>

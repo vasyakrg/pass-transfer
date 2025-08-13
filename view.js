@@ -1,6 +1,8 @@
 // CodeMirror 5 initialization for view page
 // Common variables and functions are imported from common.js
 
+let expirationTimer = null;
+
 // Initialize CodeMirror 5 editor
 function initEditor(content, language) {
 	const textarea = document.getElementById('noteEditor');
@@ -32,6 +34,65 @@ function initEditor(content, language) {
 function copyContent() {
 	const content = editor.getValue();
 	copyTextToClipboard(content);
+}
+
+// Format time remaining
+function formatTimeRemaining(seconds) {
+	if (seconds <= 0) return 'Истекло';
+
+	const days = Math.floor(seconds / 86400);
+	const hours = Math.floor((seconds % 86400) / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const secs = seconds % 60;
+
+	if (days > 0) {
+		return `${days}д ${hours}ч ${minutes}м`;
+	} else if (hours > 0) {
+		return `${hours}ч ${minutes}м ${secs}с`;
+	} else if (minutes > 0) {
+		return `${minutes}м ${secs}с`;
+	} else {
+		return `${secs}с`;
+	}
+}
+
+// Update expiration countdown
+function updateExpirationCountdown(expiresAt) {
+	if (!expiresAt) return;
+
+	const expirationElement = document.getElementById('noteExpiration');
+	if (!expirationElement) return;
+
+	const updateCountdown = () => {
+		const now = new Date().getTime();
+		const expirationTime = new Date(expiresAt).getTime();
+		const timeRemaining = Math.max(0, Math.floor((expirationTime - now) / 1000));
+
+		if (timeRemaining <= 0) {
+			expirationElement.textContent = 'Истекло';
+			expirationElement.className = 'expiration-badge expired';
+			clearInterval(expirationTimer);
+			return;
+		}
+
+		const formattedTime = formatTimeRemaining(timeRemaining);
+		expirationElement.textContent = `Истекает через: ${formattedTime}`;
+
+		// Change color based on time remaining
+		if (timeRemaining < 300) { // Less than 5 minutes
+			expirationElement.className = 'expiration-badge urgent';
+		} else if (timeRemaining < 3600) { // Less than 1 hour
+			expirationElement.className = 'expiration-badge warning';
+		} else {
+			expirationElement.className = 'expiration-badge normal';
+		}
+	};
+
+	// Update immediately
+	updateCountdown();
+
+	// Update every second
+	expirationTimer = setInterval(updateCountdown, 1000);
 }
 
 // Open note directly
@@ -94,6 +155,13 @@ async function openNote() {
 			if (dateDisplay && data.note.created_at) {
 				const date = new Date(data.note.created_at);
 				dateDisplay.textContent = date.toLocaleString('ru-RU');
+			}
+
+			// Update expiration display
+			const expirationDisplay = document.getElementById('noteExpiration');
+			if (expirationDisplay && data.note.expires_at) {
+				expirationDisplay.style.display = 'inline-block';
+				updateExpirationCountdown(data.note.expires_at);
 			}
 		} else {
 			// Show error

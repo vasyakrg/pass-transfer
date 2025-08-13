@@ -34,6 +34,7 @@ $noteId = isset($_GET['id']) ? $_GET['id'] : '';
                 <div class="note-info">
                     <span id="noteLanguage" class="language-badge"></span>
                     <span id="noteDate" class="date-badge"></span>
+                    <span id="noteExpiration" class="expiration-badge" style="display: none;"></span>
                 </div>
 
                 <div class="editor-wrapper">
