@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=pass_transfer
+      - MYSQL_USER=passuser
+      - MYSQL_PASSWORD=pass123
+      - DEBUG=0
+    depends_on:
+      - db
+    networks:
+      - pass-transfer-network
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - MYSQL_DATABASE=pass_transfer
+      - MYSQL_USER=passuser
+      - MYSQL_PASSWORD=pass123
+      - MYSQL_ROOT_PASSWORD=root123
+    ports:
+      - "3306:3306"
+    networks:
+      - pass-transfer-network
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  mysql-data:
+
+networks:
+  pass-transfer-network:
+    driver: bridge
