@@ -1,26 +1,25 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/vasyakrg/pass-transfer
+    container_name: pass-transfer
+    restart: unless-stopped
     ports:
-      - "8080:80"
-    volumes:
-      - .:/var/www/html
+      - "80:80"
     environment:
       - MYSQL_HOST=db
       - MYSQL_DATABASE=pass_transfer
       - MYSQL_USER=passuser
-      - MYSQL_PASSWORD=pass123
+      - MYSQL_PASSWORD=passuser
       - DEBUG=0
-      - SITE_URL=http://localhost:8080
+      - SITE_URL=http://localhost
     depends_on:
       - db
     networks:
-      - pass-transfer-network
+      pass-transfer-network:
 
   db:
     image: mysql:8.0
+    container_name: pass-transfer-db
     restart: unless-stopped
     volumes:
       - mysql-data:/var/lib/mysql
@@ -28,17 +27,14 @@ services:
     environment:
       - MYSQL_DATABASE=pass_transfer
       - MYSQL_USER=passuser
-      - MYSQL_PASSWORD=pass123
-      - MYSQL_ROOT_PASSWORD=root123
-    ports:
-      - "3306:3306"
-    networks:
-      - pass-transfer-network
+      - MYSQL_PASSWORD=passuser
+      - MYSQL_ROOT_PASSWORD=passroot
     command: --default-authentication-plugin=mysql_native_password
+    networks:
+      pass-transfer-network:
 
 volumes:
   mysql-data:
 
 networks:
   pass-transfer-network:
-    driver: bridge

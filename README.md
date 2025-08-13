@@ -33,16 +33,14 @@
 
 ```bash
 # Клонирование репозитория
-git clone <repository-url>
+git clone https://github.com/vasyakrg/pass-transfer.git
 cd pass-transfer
 
 # Запуск приложения
-docker-compose up -d
+docker-compose up -f docker-compose-host.yml -d
 
-# Проверка статуса
-./docker/check.sh
 
-# Приложение доступно по адресу: http://localhost:8080
+# Приложение доступно по адресу: http://localhost - поменяйте на свой домен
 ```
 
 ### Kubernetes с Helm
@@ -51,7 +49,7 @@ docker-compose up -d
 # Установка в Kubernetes
 helm install my-pass-transfer ./helm
 
-# Установка с кастомными настройками
+# Установка с кастомными настройками (файл нужно создать)
 helm install my-pass-transfer ./helm -f values-prod.yaml
 
 # Обновление
