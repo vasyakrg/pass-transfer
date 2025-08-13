@@ -1,0 +1,16 @@
+.git
+.github
+.DS_Store
+node_modules
+npm-debug.log*
+yarn-error.log
+.vscode
+.idea
+*.log
+.env
+.env.*
+docker/
+docker-compose.yml
+img/*
+__pycache__/
+**/.pytest_cache
