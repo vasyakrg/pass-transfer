@@ -1,0 +1,17 @@
+apiVersion: v2
+name: pass-transfer
+description: A Helm chart for PassTransfer - secure note sharing application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - pass-transfer
+  - notes
+  - sharing
+  - security
+home: https://github.com/vasyakrg/pass-transfer
+sources:
+  - https://github.com/vasyakrg/pass-transfer
+maintainers:
+  - name: Your Name
+    email: your.email@example.com

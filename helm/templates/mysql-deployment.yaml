@@ -1,0 +1,78 @@
+{{- if .Values.database.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pass-transfer.fullname" . }}-mysql
+  labels:
+    {{- include "pass-transfer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "pass-transfer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        {{- include "pass-transfer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: mysql
+          image: "{{ .Values.database.mysql.image.repository }}:{{ .Values.database.mysql.image.tag }}"
+          imagePullPolicy: {{ .Values.database.mysql.image.pullPolicy }}
+          ports:
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pass-transfer.fullname" . }}-mysql
+                  key: root-password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pass-transfer.fullname" . }}-mysql
+                  key: database
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pass-transfer.fullname" . }}-mysql
+                  key: username
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pass-transfer.fullname" . }}-mysql
+                  key: password
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+      volumes:
+        - name: mysql-data
+          {{- if .Values.database.mysql.primary.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "pass-transfer.fullname" . }}-mysql
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- end }}

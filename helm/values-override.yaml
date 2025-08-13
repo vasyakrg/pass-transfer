@@ -1,0 +1,90 @@
+# Default values for pass-transfer
+replicaCount: 1
+
+image:
+  repository: ghcr.io/vasyakrg/pass-transfer
+  pullPolicy: Always
+  tag: "with-mysql"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: pss.ntk.novotelecom.ru
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: tls-ntk-ingress
+      hosts:
+        - pss.ntk.novotelecom.ru
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Database configuration
+database:
+  enabled: true
+  type: mysql
+  mysql:
+    image:
+      repository: mysql
+      tag: "8.0"
+      pullPolicy: IfNotPresent
+    auth:
+      rootPassword: "root123"
+      database: "pass_transfer"
+      username: "passuser"
+      password: "pass123"
+    primary:
+      persistence:
+        enabled: true
+        storageClass: "piraeus-storage"
+        size: 1Gi
+    service:
+      type: ClusterIP
+      port: 3306
+
+# Application configuration
+config:
+  debug: true
+  companyWhitelabel: "NTK PassTransfer"
+  warningOneTimeLink: "Внимание! Создаваемая ссылка будет доступна только один раз."
+  warningConfirmOpen: "Внимание! После открытия заметка будет удалена."

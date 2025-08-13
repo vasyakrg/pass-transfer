@@ -1,0 +1,18 @@
+{{- if and .Values.database.enabled .Values.database.mysql.primary.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "pass-transfer.fullname" . }}-mysql
+  labels:
+    {{- include "pass-transfer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.database.mysql.primary.persistence.storageClass }}
+  storageClassName: {{ .Values.database.mysql.primary.persistence.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.database.mysql.primary.persistence.size }}
+{{- end }}

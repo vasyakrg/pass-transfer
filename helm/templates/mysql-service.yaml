@@ -1,0 +1,19 @@
+{{- if .Values.database.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pass-transfer.fullname" . }}-mysql
+  labels:
+    {{- include "pass-transfer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  type: {{ .Values.database.mysql.service.type }}
+  ports:
+    - port: {{ .Values.database.mysql.service.port }}
+      targetPort: mysql
+      protocol: TCP
+      name: mysql
+  selector:
+    {{- include "pass-transfer.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+{{- end }}
