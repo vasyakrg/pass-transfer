@@ -45,3 +45,5 @@ yarn-error.log*
 # Backup files
 *.bak
 *.backup
+
+helm/values-override*
