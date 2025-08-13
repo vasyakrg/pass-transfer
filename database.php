@@ -7,6 +7,7 @@ class Database {
     public function __construct() {
         $this->connect();
         $this->createTables();
+        $this->migrateTables();
     }
 
     private function connect() {
@@ -34,10 +35,29 @@ class Database {
         }
     }
 
+    private function migrateTables() {
+        // Check if is_used column exists and migrate to is_viewed
+        $result = $this->connection->query("SHOW COLUMNS FROM notes LIKE 'is_used'");
+        if ($result && $result->num_rows > 0) {
+            // Column exists, migrate data and rename
+            $this->connection->query("ALTER TABLE notes ADD COLUMN is_viewed BOOLEAN DEFAULT FALSE");
+            $this->connection->query("UPDATE notes SET is_viewed = is_used");
+            $this->connection->query("ALTER TABLE notes DROP COLUMN is_used");
+        }
+    }
+
     public function createNote($id, $content, $language = 'text', $expiresAt = null) {
         $stmt = $this->connection->prepare("INSERT INTO notes (id, content, language, expires_at) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $id, $content, $language, $expiresAt);
         return $stmt->execute();
+    }
+
+    public function checkNoteStatus($id) {
+        $stmt = $this->connection->prepare("SELECT id, language, created_at, expires_at FROM notes WHERE id = ? AND is_viewed = FALSE AND (expires_at IS NULL OR expires_at > NOW())");
+        $stmt->bind_param("s", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 
     public function getNote($id) {

@@ -24,6 +24,7 @@ $noteId = isset($_GET['id']) ? $_GET['id'] : '';
                 <div class="confirm-box">
                     <h3>Подтверждение открытия</h3>
                     <p><?php echo WARNING_CONFIRM_OPEN; ?></p>
+                    <div id="confirmExpiration" class="expiration-badge" style="display: none;"></div>
                     <div class="confirm-actions">
                         <button id="openBtn" class="btn btn-primary">Открыть заметку</button>
                     </div>
@@ -34,7 +35,6 @@ $noteId = isset($_GET['id']) ? $_GET['id'] : '';
                 <div class="note-info">
                     <span id="noteLanguage" class="language-badge"></span>
                     <span id="noteDate" class="date-badge"></span>
-                    <span id="noteExpiration" class="expiration-badge" style="display: none;"></span>
                 </div>
 
                 <div class="editor-wrapper">

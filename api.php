@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $expiresAt = null;
                     if ($expiration > 0) {
                         $expiresAt = date('Y-m-d H:i:s', time() + $expiration);
+                        error_log("Creating note with expiration: $expiration seconds, expires at: $expiresAt");
                     }
 
                     if ($db->createNote($id, $content, $language, $expiresAt)) {
@@ -43,6 +44,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     echo json_encode(['success' => false, 'error' => 'Content is required']);
+                }
+                break;
+
+            case 'check_status':
+                if (isset($input['id']) && !empty($input['id'])) {
+                    $note = $db->checkNoteStatus($input['id']);
+                    if ($note) {
+                        error_log("Note status check - expires_at: " . ($note['expires_at'] ?? 'null'));
+                        echo json_encode([
+                            'success' => true,
+                            'note' => $note
+                        ]);
+                    } else {
+                        echo json_encode(['success' => false, 'error' => 'Note not found, already used, or expired']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'ID is required']);
                 }
                 break;
 

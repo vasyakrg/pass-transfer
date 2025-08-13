@@ -56,42 +56,59 @@ function formatTimeRemaining(seconds) {
 	}
 }
 
-// Update expiration countdown
-function updateExpirationCountdown(expiresAt) {
+// Check if note is expired
+function isNoteExpired(expiresAt) {
+	if (!expiresAt) return false;
+
+	const expirationTime = new Date(expiresAt + ' UTC');
+	const now = new Date();
+
+	return expirationTime.getTime() <= now.getTime();
+}
+
+// Update expiration countdown for confirm screen
+function updateConfirmExpirationCountdown(expiresAt) {
 	if (!expiresAt) return;
 
-	const expirationElement = document.getElementById('noteExpiration');
+	const expirationElement = document.getElementById('confirmExpiration');
 	if (!expirationElement) return;
 
+	debugLog('Expiration time from DB:', expiresAt);
+
 	const updateCountdown = () => {
-		const now = new Date().getTime();
-		const expirationTime = new Date(expiresAt).getTime();
-		const timeRemaining = Math.max(0, Math.floor((expirationTime - now) / 1000));
+		// Parse the database time as UTC
+		const expirationTime = new Date(expiresAt + ' UTC');
+		const now = new Date();
+
+		debugLog('Current time (local):', now.toISOString());
+		debugLog('Expiration time (UTC):', expirationTime.toISOString());
+
+		const timeRemaining = Math.max(0, Math.floor((expirationTime.getTime() - now.getTime()) / 1000));
+
+		debugLog('Time remaining (seconds):', timeRemaining);
 
 		if (timeRemaining <= 0) {
-			expirationElement.textContent = 'Истекло';
+			expirationElement.textContent = 'Срок действия заметки истек';
 			expirationElement.className = 'expiration-badge expired';
+			expirationElement.style.display = 'inline-block';
 			clearInterval(expirationTimer);
 			return;
 		}
 
 		const formattedTime = formatTimeRemaining(timeRemaining);
-		expirationElement.textContent = `Истекает через: ${formattedTime}`;
+		expirationElement.textContent = `Заметка истечет через: ${formattedTime}`;
+		expirationElement.style.display = 'inline-block';
 
-		// Change color based on time remaining
-		if (timeRemaining < 300) { // Less than 5 minutes
+		if (timeRemaining < 300) {
 			expirationElement.className = 'expiration-badge urgent';
-		} else if (timeRemaining < 3600) { // Less than 1 hour
+		} else if (timeRemaining < 3600) {
 			expirationElement.className = 'expiration-badge warning';
 		} else {
 			expirationElement.className = 'expiration-badge normal';
 		}
 	};
 
-	// Update immediately
 	updateCountdown();
-
-	// Update every second
 	expirationTimer = setInterval(updateCountdown, 1000);
 }
 
@@ -100,7 +117,7 @@ async function openNoteDirectly() {
 	await openNote();
 }
 
-// Open note
+// Open note (consumes the note)
 async function openNote() {
 	try {
 		const response = await fetch('api.php', {
@@ -156,13 +173,6 @@ async function openNote() {
 				const date = new Date(data.note.created_at);
 				dateDisplay.textContent = date.toLocaleString('ru-RU');
 			}
-
-			// Update expiration display
-			const expirationDisplay = document.getElementById('noteExpiration');
-			if (expirationDisplay && data.note.expires_at) {
-				expirationDisplay.style.display = 'inline-block';
-				updateExpirationCountdown(data.note.expires_at);
-			}
 		} else {
 			// Show error
 			document.getElementById('confirmContainer').style.display = 'none';
@@ -178,9 +188,7 @@ async function openNote() {
 	}
 }
 
-
-
-// Check note status on page load
+// Check note status on page load and show expiration on confirm screen
 async function checkNoteStatus() {
 	try {
 		const response = await fetch('api.php', {
@@ -189,7 +197,7 @@ async function checkNoteStatus() {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
-				action: 'get',
+				action: 'check_status',
 				id: noteId
 			})
 		});
@@ -202,6 +210,21 @@ async function checkNoteStatus() {
 			document.getElementById('confirmContainer').style.display = 'none';
 			document.getElementById('errorContainer').style.display = 'block';
 			document.getElementById('errorMessage').textContent = data.error || 'Заметка не найдена или уже использована';
+			return;
+		}
+
+		// Check if note is expired
+		if (data.note && data.note.expires_at && isNoteExpired(data.note.expires_at)) {
+			// Note is expired, show error immediately
+			document.getElementById('confirmContainer').style.display = 'none';
+			document.getElementById('errorContainer').style.display = 'block';
+			document.getElementById('errorMessage').textContent = 'Срок действия заметки истек';
+			return;
+		}
+
+		// If note exists and has expiration, show countdown on confirm screen
+		if (data.note && data.note.expires_at) {
+			updateConfirmExpirationCountdown(data.note.expires_at);
 		}
 	} catch (error) {
 		debugLog('Error checking note status:', error);
